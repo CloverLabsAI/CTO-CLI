@@ -1,0 +1,12 @@
+# Worklog CLI Dependencies
+
+# CLI formatting and display
+rich>=13.0.0
+
+# HTTP requests for GitHub API
+requests>=2.28.0
+
+# Google Calendar API
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=1.0.0
