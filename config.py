@@ -133,8 +133,30 @@ def setup_config():
 
     console.print()
 
+    # Slack Setup
+    console.print("[bold]4. Slack Configuration (Optional)[/bold]")
+    console.print("   To access your Slack messages, you need a User OAuth Token.")
+    console.print()
+    console.print("   [cyan]Setup steps:[/cyan]")
+    console.print("   1. Go to https://api.slack.com/apps")
+    console.print("   2. Click 'Create New App' → 'From scratch'")
+    console.print("   3. Go to 'OAuth & Permissions'")
+    console.print("   4. Add scope: [cyan]search:read[/cyan]")
+    console.print("   5. Install to workspace and copy the User OAuth Token")
+    console.print()
+
+    slack_token = Prompt.ask(
+        "   Slack User OAuth Token (or press Enter to skip)",
+        password=True,
+        default=config.get("slack_token", "")[:10] + "..." if config.get("slack_token") else ""
+    )
+    if slack_token and not slack_token.endswith("..."):
+        config["slack_token"] = slack_token
+
+    console.print()
+
     # Anthropic API Key Setup
-    console.print("[bold]4. AI Assistant Configuration (Optional)[/bold]")
+    console.print("[bold]5. AI Assistant Configuration (Optional)[/bold]")
     console.print("   Get your API key at: https://console.anthropic.com/")
     console.print()
 
@@ -223,6 +245,20 @@ def test_connections(config: dict):
             console.print("   [red]✗ Chrome History:[/red] Could not access history database")
     except Exception as e:
         console.print(f"   [red]✗ Chrome History:[/red] {e}")
+
+    # Test Slack
+    if config.get("slack_token"):
+        try:
+            from slack import get_slack_user_info
+            user_info = get_slack_user_info(config)
+            if user_info:
+                console.print(f"   [green]✓ Slack:[/green] Connected as {user_info['user']} ({user_info['team']})")
+            else:
+                console.print("   [red]✗ Slack:[/red] Could not authenticate")
+        except Exception as e:
+            console.print(f"   [red]✗ Slack:[/red] {e}")
+    else:
+        console.print("   [yellow]○ Slack:[/yellow] Not configured")
 
     # Test Anthropic API
     if config.get("anthropic_api_key"):

@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from chrome import get_chrome_history
 from github import get_github_commits
 from gcalendar import get_calendar_events
+from slack import get_slack_messages
 from config import load_config
 
 
@@ -22,7 +23,7 @@ TOOLS = [
     {
         "name": "get_work_data",
         "description": """Fetch work activity data from multiple sources for a specific date range.
-Returns calendar events, browser history, and GitHub commits.
+Returns calendar events, browser history, GitHub commits, and Slack messages.
 Use this tool when you need to analyze the user's work activities, generate reports,
 or answer questions about what they worked on.""",
         "input_schema": {
@@ -40,7 +41,7 @@ or answer questions about what they worked on.""",
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["calendar", "browser", "github"]
+                        "enum": ["calendar", "browser", "github", "slack"]
                     },
                     "description": "Which data sources to fetch. Defaults to all if not specified."
                 }
@@ -76,7 +77,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> dict[str, Any]:
         return _fetch_work_data(
             tool_input["start_date"],
             tool_input["end_date"],
-            tool_input.get("sources", ["calendar", "browser", "github"])
+            tool_input.get("sources", ["calendar", "browser", "github", "slack"])
         )
 
     else:
@@ -147,5 +148,22 @@ def _fetch_work_data(start_date: str, end_date: str, sources: list[str]) -> dict
             ]
         except Exception as e:
             result["data"]["github_commits"] = {"error": str(e)}
+
+    # Fetch Slack messages
+    if "slack" in sources:
+        try:
+            messages = get_slack_messages(config, start, end)
+            # Limit and format messages
+            result["data"]["slack_messages"] = [
+                {
+                    "channel": m["channel"],
+                    "text": m["text"][:200] + "..." if len(m["text"]) > 200 else m["text"],
+                    "time": m["time"],
+                }
+                for m in messages[:50]  # Limit to 50 messages
+            ]
+            result["data"]["slack_messages_total"] = len(messages)
+        except Exception as e:
+            result["data"]["slack_messages"] = {"error": str(e)}
 
     return result
