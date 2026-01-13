@@ -21,7 +21,7 @@ from rich import box
 from gcalendar import get_calendar_events
 from chrome import get_chrome_history
 from github import get_github_commits
-from config import load_config, setup_config, is_configured
+from config import load_config, setup_config, is_configured, is_ai_configured
 
 
 console = Console()
@@ -428,6 +428,38 @@ def cmd_month(args):
     display_range_summary(title, start, end, events, searches, commits)
 
 
+def cmd_chat(args):
+    """Start the AI CTO agent conversation."""
+    from agent import CTOAgent, run_chat_loop
+
+    # Check AI configuration
+    if not is_ai_configured():
+        console.print("[red]Error: Anthropic API key not configured.[/red]")
+        console.print("Run 'worklog setup' to add your API key.")
+        sys.exit(1)
+
+    if not is_configured():
+        console.print("[yellow]Warning: Data sources not fully configured.[/yellow]")
+        console.print("Some features may be limited. Run 'worklog setup' to configure.")
+
+    # Initialize agent
+    try:
+        agent = CTOAgent(model=args.model)
+    except Exception as e:
+        console.print(f"[red]Error initializing agent: {e}[/red]")
+        sys.exit(1)
+
+    # Handle single query mode
+    if args.query:
+        with console.status("[bold blue]Thinking...[/bold blue]"):
+            response = agent.chat(args.query)
+        console.print(Markdown(response))
+        return
+
+    # Run interactive loop
+    run_chat_loop(agent)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Worklog - Track your daily work across Calendar, Chrome, and GitHub",
@@ -444,6 +476,8 @@ Examples:
   worklog month                Show current month's summary
   worklog month january        Show January of current year
   worklog month 2024-01        Show January 2024
+  worklog chat                 Start AI CTO agent conversation
+  worklog chat -q "question"   Ask a single question
   worklog setup                Configure API credentials
         """
     )
@@ -468,6 +502,19 @@ Examples:
     month_parser = subparsers.add_parser("month", help="Show month's summary")
     month_parser.add_argument("month", nargs="?", help="Month (e.g., 'january', '1', or '2024-01')")
     month_parser.set_defaults(func=cmd_month)
+
+    # Chat command (AI CTO agent)
+    chat_parser = subparsers.add_parser("chat", help="Start AI CTO agent conversation")
+    chat_parser.add_argument(
+        "--query", "-q",
+        help="Single query mode (non-interactive)"
+    )
+    chat_parser.add_argument(
+        "--model", "-m",
+        default="claude-sonnet-4-20250514",
+        help="Claude model to use (default: claude-sonnet-4-20250514)"
+    )
+    chat_parser.set_defaults(func=cmd_chat)
 
     # Default command arguments (for running without subcommand)
     parser.add_argument("--date", "-d", help="Date to show summary for (YYYY-MM-DD)")

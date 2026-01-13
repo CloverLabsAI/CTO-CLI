@@ -51,6 +51,12 @@ def is_configured() -> bool:
     return bool(config.get("github_token"))
 
 
+def is_ai_configured() -> bool:
+    """Check if AI features are configured."""
+    config = load_config()
+    return bool(config.get("anthropic_api_key"))
+
+
 def setup_config():
     """Interactive setup wizard."""
     console.print()
@@ -116,7 +122,7 @@ def setup_config():
     console.print("   Chrome history is read directly from your local browser database.")
     console.print("   Note: Chrome must be closed when reading history (or we'll copy the database).")
     console.print()
-    
+
     # Detect Chrome profile
     default_profile = detect_chrome_profile()
     chrome_profile = Prompt.ask(
@@ -124,9 +130,24 @@ def setup_config():
         default=config.get("chrome_profile", default_profile or "Default")
     )
     config["chrome_profile"] = chrome_profile
-    
+
     console.print()
-    
+
+    # Anthropic API Key Setup
+    console.print("[bold]4. AI Assistant Configuration (Optional)[/bold]")
+    console.print("   Get your API key at: https://console.anthropic.com/")
+    console.print()
+
+    anthropic_key = Prompt.ask(
+        "   Anthropic API Key (or press Enter to skip)",
+        password=True,
+        default=config.get("anthropic_api_key", "")[:8] + "..." if config.get("anthropic_api_key") else ""
+    )
+    if anthropic_key and not anthropic_key.endswith("..."):
+        config["anthropic_api_key"] = anthropic_key
+
+    console.print()
+
     # Save config
     save_config(config)
     console.print("[green]✓ Configuration saved to ~/.worklog/config.json[/green]")
@@ -202,5 +223,22 @@ def test_connections(config: dict):
             console.print("   [red]✗ Chrome History:[/red] Could not access history database")
     except Exception as e:
         console.print(f"   [red]✗ Chrome History:[/red] {e}")
-    
+
+    # Test Anthropic API
+    if config.get("anthropic_api_key"):
+        try:
+            from anthropic import Anthropic
+            client = Anthropic(api_key=config["anthropic_api_key"])
+            # Make a minimal API call to verify the key works
+            response = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=10,
+                messages=[{"role": "user", "content": "Hi"}]
+            )
+            console.print("   [green]✓ Anthropic:[/green] API key valid")
+        except Exception as e:
+            console.print(f"   [red]✗ Anthropic:[/red] {e}")
+    else:
+        console.print("   [yellow]○ Anthropic:[/yellow] Not configured")
+
     console.print()
