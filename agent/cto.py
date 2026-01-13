@@ -108,53 +108,92 @@ class CTOAgent:
 
 
 def run_chat_loop(agent: CTOAgent):
-    """Run the interactive chat loop."""
+    """Run the interactive chat loop in fullscreen alternate screen mode (like vim/nano)."""
+    import curses
+    import io
+    import sys
+    from contextlib import redirect_stdout, redirect_stderr
 
-    console.print()
-    console.print(Panel(
-        "[bold cyan]Worklog CTO Agent[/bold cyan]\n"
-        "[dim]Ask me about your work, request reports, or get insights.[/dim]\n"
-        "[dim]Type 'exit' to end, 'clear' for new conversation, 'help' for commands.[/dim]",
-        box=box.ROUNDED
-    ))
-    console.print()
+    def _main_loop(stdscr):
+        """Main curses loop - runs in alternate screen."""
+        # Exit curses mode temporarily to use Rich for display
+        curses.endwin()
 
-    while True:
-        try:
-            # Get user input
-            user_input = console.input("[bold green]You:[/bold green] ").strip()
+        # Now we're in the alternate screen but can use normal terminal I/O
+        alt_console = Console()
 
-            if not user_input:
-                continue
+        def _draw_header(message: str = None):
+            """Draw the header panel."""
+            alt_console.clear()
+            alt_console.print()
+            alt_console.print(Panel(
+                "[bold cyan]CTO Agent[/bold cyan]\n"
+                f"[dim]{message or 'Ask me about your work, request reports, or get insights.'}[/dim]\n"
+                "[dim]Type 'exit' to end, 'clear' for new conversation, 'help' for commands.[/dim]",
+                box=box.ROUNDED,
+                width=min(80, alt_console.width),
+            ), justify="center")
+            alt_console.print()
 
-            # Handle special commands
-            if user_input.lower() in ("exit", "quit", "q"):
-                console.print("[dim]Goodbye![/dim]")
-                break
+        _draw_header()
 
-            if user_input.lower() == "help":
-                _show_help()
-                continue
+        while True:
+            try:
+                # Get user input
+                user_input = alt_console.input("[bold green]You:[/bold green] ").strip()
 
-            if user_input.lower() == "clear":
-                agent.clear_history()
-                console.print("[dim]Started new conversation.[/dim]")
-                continue
+                if not user_input:
+                    continue
 
-            # Get response from agent
-            with console.status("[bold blue]Thinking...[/bold blue]"):
-                response = agent.chat(user_input)
+                # Handle special commands
+                if user_input.lower() in ("exit", "quit", "q"):
+                    break
 
-            # Display response
-            console.print()
-            console.print("[bold blue]CTO Agent:[/bold blue]")
-            console.print(Markdown(response))
-            console.print()
+                if user_input.lower() == "help":
+                    _show_help_alt(alt_console)
+                    continue
 
-        except KeyboardInterrupt:
-            console.print("\n[dim]Interrupted. Type 'exit' to quit.[/dim]")
-        except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
+                if user_input.lower() == "clear":
+                    agent.clear_history()
+                    _draw_header("New conversation started.")
+                    continue
+
+                # Get response from agent
+                with alt_console.status("[bold blue]Thinking...[/bold blue]"):
+                    response = agent.chat(user_input)
+
+                # Display response
+                alt_console.print()
+                alt_console.print("[bold blue]CTO Agent:[/bold blue]")
+                alt_console.print(Markdown(response))
+                alt_console.print()
+
+            except KeyboardInterrupt:
+                alt_console.print("\n[dim]Interrupted. Type 'exit' to quit.[/dim]")
+            except Exception as e:
+                alt_console.print(f"[red]Error: {e}[/red]")
+
+    # Use curses.wrapper to handle alternate screen setup/teardown
+    curses.wrapper(_main_loop)
+
+
+def _show_help_alt(alt_console):
+    """Display help information in alternate screen."""
+    help_text = """
+## Commands
+- `exit` / `quit` - End the conversation
+- `clear` - Start a new conversation
+- `help` - Show this help
+
+## Example Questions
+- "What did I work on today?"
+- "Generate my standup notes"
+- "Create a weekly report"
+- "How many commits did I make this week?"
+- "What meetings do I have today?"
+- "Summarize my browser research this week"
+"""
+    alt_console.print(Markdown(help_text))
 
 
 def _show_help():
