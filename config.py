@@ -135,13 +135,19 @@ def setup_config():
 
     # Slack Setup
     console.print("[bold]4. Slack Configuration (Optional)[/bold]")
-    console.print("   To access your Slack messages, you need a User OAuth Token.")
+    console.print("   To access your Slack messages (including DMs), you need a User OAuth Token.")
     console.print()
     console.print("   [cyan]Setup steps:[/cyan]")
     console.print("   1. Go to https://api.slack.com/apps")
     console.print("   2. Click 'Create New App' → 'From scratch'")
     console.print("   3. Go to 'OAuth & Permissions'")
-    console.print("   4. Add scope: [cyan]search:read[/cyan]")
+    console.print("   4. Add User Token Scopes:")
+    console.print("      - [cyan]search:read[/cyan] (search messages)")
+    console.print("      - [cyan]im:history[/cyan], [cyan]im:read[/cyan] (DMs)")
+    console.print("      - [cyan]mpim:history[/cyan], [cyan]mpim:read[/cyan] (group DMs)")
+    console.print("      - [cyan]channels:history[/cyan], [cyan]channels:read[/cyan] (public channels)")
+    console.print("      - [cyan]groups:history[/cyan], [cyan]groups:read[/cyan] (private channels)")
+    console.print("      - [cyan]users:read[/cyan] (user names for DMs)")
     console.print("   5. Install to workspace and copy the User OAuth Token")
     console.print()
 

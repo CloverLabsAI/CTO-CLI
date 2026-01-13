@@ -121,7 +121,13 @@ Run `cto setup` to configure all integrations. Here's what you'll need:
 
 ### Slack (Optional)
 1. Go to [Slack API Apps](https://api.slack.com/apps)
-2. Create an app with `search:read` scope
+2. Create an app and add these User Token Scopes:
+   - `search:read` - Search messages
+   - `im:history`, `im:read` - DMs
+   - `mpim:history`, `mpim:read` - Group DMs
+   - `channels:history`, `channels:read` - Public channels
+   - `groups:history`, `groups:read` - Private channels
+   - `users:read` - User names
 3. Install to your workspace and copy the User OAuth Token
 
 ### Linear (Optional)
