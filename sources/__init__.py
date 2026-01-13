@@ -6,6 +6,12 @@ from sources.gcalendar import get_calendar_events, test_calendar_connection
 from sources.chrome import get_chrome_history, test_chrome_access
 from sources.github import get_github_commits, test_github_connection
 from sources.slack import get_slack_messages, test_slack_connection, get_slack_user_info
+from sources.linear import (
+    get_linear_activity,
+    get_linear_audit_logs,
+    test_linear_connection,
+    get_linear_user_info,
+)
 
 __all__ = [
     "get_calendar_events",
@@ -17,4 +23,8 @@ __all__ = [
     "get_slack_messages",
     "test_slack_connection",
     "get_slack_user_info",
+    "get_linear_activity",
+    "get_linear_audit_logs",
+    "test_linear_connection",
+    "get_linear_user_info",
 ]

@@ -155,8 +155,29 @@ def setup_config():
 
     console.print()
 
+    # Linear Setup
+    console.print("[bold]5. Linear Configuration (Optional)[/bold]")
+    console.print("   To access Linear issues and audit logs, you need an API key.")
+    console.print()
+    console.print("   [cyan]Setup steps:[/cyan]")
+    console.print("   1. Go to https://linear.app/settings/api")
+    console.print("   2. Click 'Create key' under Personal API keys")
+    console.print("   3. Give it a label (e.g., 'CTO CLI')")
+    console.print("   4. Copy the generated key")
+    console.print()
+
+    linear_key = Prompt.ask(
+        "   Linear API Key (or press Enter to skip)",
+        password=True,
+        default=config.get("linear_api_key", "")[:10] + "..." if config.get("linear_api_key") else ""
+    )
+    if linear_key and not linear_key.endswith("..."):
+        config["linear_api_key"] = linear_key
+
+    console.print()
+
     # Anthropic API Key Setup
-    console.print("[bold]5. AI Assistant Configuration (Optional)[/bold]")
+    console.print("[bold]6. AI Assistant Configuration (Optional)[/bold]")
     console.print("   Get your API key at: https://console.anthropic.com/")
     console.print()
 
@@ -259,6 +280,20 @@ def test_connections(config: dict):
             console.print(f"   [red]✗ Slack:[/red] {e}")
     else:
         console.print("   [yellow]○ Slack:[/yellow] Not configured")
+
+    # Test Linear
+    if config.get("linear_api_key"):
+        try:
+            from sources import get_linear_user_info
+            user_info = get_linear_user_info(config)
+            if user_info:
+                console.print(f"   [green]✓ Linear:[/green] Connected as {user_info['name']} ({user_info['organization']})")
+            else:
+                console.print("   [red]✗ Linear:[/red] Could not authenticate")
+        except Exception as e:
+            console.print(f"   [red]✗ Linear:[/red] {e}")
+    else:
+        console.print("   [yellow]○ Linear:[/yellow] Not configured")
 
     # Test Anthropic API
     if config.get("anthropic_api_key"):

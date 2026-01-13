@@ -25,11 +25,13 @@ cto setup
 - **Chrome History** - What you searched and researched
 - **GitHub** - Your code commits
 - **Slack** - Messages you sent (optional)
+- **Linear** - Issues, projects, and audit logs (optional)
 
 ## Features
 
 - **Daily/Weekly/Monthly Summaries** - View formatted work summaries for any time period
 - **AI CTO Agent** - Conversational AI that generates standup notes, weekly reports, and answers questions about your work
+- **Linear Integration** - Query your Linear workspace, search issues, view projects, and analyze audit logs
 - **Flexible Date Queries** - Query by specific dates, weeks, or months
 
 ## Usage
@@ -61,6 +63,8 @@ Ask a single question:
 cto chat -q "Generate my standup notes"
 cto chat -q "What did I work on this week?"
 cto chat -q "Create a weekly report"
+cto chat -q "What are my open Linear issues?"
+cto chat -q "Show me the audit logs from last week"
 ```
 
 #### Example Interactions
@@ -74,7 +78,7 @@ CTO Agent:
 **Yesterday:**
 - Attended Sprint Planning meeting (1h)
 - Committed 3 changes to experiments repo
-- Researched Chrome history database structure
+- Worked on ENG-123: Add user authentication
 
 **Today:**
 - Team sync at 10:00 AM
@@ -82,6 +86,22 @@ CTO Agent:
 
 **Blockers:**
 - None
+```
+
+```
+You: What Linear issues am I working on?
+
+CTO Agent:
+You currently have 5 issues assigned:
+
+**In Progress:**
+- ENG-156: Implement Linear MCP integration
+- ENG-148: Add audit log viewer
+
+**Todo:**
+- ENG-162: Update documentation
+- ENG-163: Add unit tests
+- ENG-170: Performance optimization
 ```
 
 ## Setup Guide
@@ -103,6 +123,14 @@ Run `cto setup` to configure all integrations. Here's what you'll need:
 1. Go to [Slack API Apps](https://api.slack.com/apps)
 2. Create an app with `search:read` scope
 3. Install to your workspace and copy the User OAuth Token
+
+### Linear (Optional)
+1. Go to [Linear Settings → API](https://linear.app/settings/api)
+2. Click "Create key" under Personal API keys
+3. Give it a label (e.g., "CTO CLI")
+4. Copy the generated key and provide it during setup
+
+**Note:** Audit logs require Linear Plus plan and admin access.
 
 ### AI Agent (Optional)
 1. Get an API key from [Anthropic Console](https://console.anthropic.com/)
@@ -134,11 +162,12 @@ pip install -e .
 | "Cannot access Chrome history" | Close Chrome or the tool will copy the database |
 | "Google credentials not found" | Run `cto setup` and provide OAuth JSON path |
 | "GitHub authentication failed" | Generate a new token at github.com/settings/tokens |
+| "Linear API key not configured" | Run `cto setup` to add your Linear API key |
 | "Anthropic API key not configured" | Run `cto setup` to add your API key |
 
 ## Privacy
 
-All data is processed locally. Credentials are stored in `~/.worklog/` with restricted permissions. Data is only sent to the respective APIs (Google, GitHub, Slack, Anthropic) as needed.
+All data is processed locally. Credentials are stored in `~/.worklog/` with restricted permissions. Data is only sent to the respective APIs (Google, GitHub, Slack, Linear, Anthropic) as needed.
 
 ## License
 
