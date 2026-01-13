@@ -1,0 +1,3 @@
+[console_scripts]
+cto = worklog:main
+worklog = worklog:main

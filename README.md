@@ -1,6 +1,23 @@
-# Worklog CLI
+# CTO CLI
 
-A command-line tool that gives you a daily breakdown of your work by aggregating data from multiple sources, with an AI-powered CTO agent for generating reports and insights.
+An AI-powered command-line tool that gives you a daily breakdown of your work by aggregating data from multiple sources, with an intelligent CTO agent for generating reports and insights.
+
+## Quick Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/CloverLabsAI/CTO-CLI/main/install.sh | bash
+```
+
+Then add `~/.local/bin` to your PATH (if not already):
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Run setup to configure your credentials:
+```bash
+cto setup
+```
 
 ## Data Sources
 
@@ -15,146 +32,38 @@ A command-line tool that gives you a daily breakdown of your work by aggregating
 - **AI CTO Agent** - Conversational AI that generates standup notes, weekly reports, and answers questions about your work
 - **Flexible Date Queries** - Query by specific dates, weeks, or months
 
-## Installation
-
-1. Clone or download this repository
-
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. (Optional) Make it globally accessible:
-   ```bash
-   # Add to your shell profile (.bashrc, .zshrc, etc.)
-   alias worklog="/path/to/cto_cli/.venv/bin/python /path/to/cto_cli/worklog.py"
-   ```
-
-## Setup
-
-Run the setup wizard to configure your credentials:
-
-```bash
-python worklog.py setup
-```
-
-This will guide you through configuring:
-1. GitHub Personal Access Token
-2. Google Calendar OAuth credentials
-3. Chrome profile selection
-4. Slack User OAuth Token (optional)
-5. Anthropic API key for AI features (optional)
-
-### Google Calendar Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (or select existing)
-3. Enable the **Google Calendar API**:
-   - Go to "APIs & Services" → "Library"
-   - Search for "Google Calendar API"
-   - Click "Enable"
-4. Create OAuth credentials:
-   - Go to "APIs & Services" → "Credentials"
-   - Click "Create Credentials" → "OAuth client ID"
-   - Choose "Desktop application"
-   - Download the JSON file
-5. During `worklog setup`, provide the path to this JSON file
-
-On first run, a browser window will open for you to authorize access to your calendar.
-
-### GitHub Setup
-
-1. Go to [GitHub Settings → Developer Settings → Personal Access Tokens](https://github.com/settings/tokens)
-2. Click "Generate new token (classic)"
-3. Give it a name like "worklog-cli"
-4. Select scopes:
-   - `repo` (for private repos) OR
-   - `public_repo` (for public repos only)
-5. Copy the token and provide it during `worklog setup`
-
-### Chrome History
-
-Chrome history is read directly from your local browser database. The setup wizard will detect available Chrome profiles.
-
-**Note:** Chrome must be closed when reading history, or the tool will copy the database first.
-
-### Slack Setup (Optional)
-
-1. Go to [Slack API Apps](https://api.slack.com/apps)
-2. Click "Create New App" → "From scratch"
-3. Go to "OAuth & Permissions"
-4. Add User Token Scope: `search:read`
-5. Install the app to your workspace
-6. Copy the **User OAuth Token** (starts with `xoxp-`)
-7. Provide it during `worklog setup`
-
-### AI Agent Setup (Optional)
-
-1. Get an API key from [Anthropic Console](https://console.anthropic.com/)
-2. Provide it during `worklog setup`
-
 ## Usage
 
 ### Today's Summary
 ```bash
-python worklog.py
-# or: worklog (if you set up the alias)
+cto                    # Show today's work summary
+cto --yesterday        # Show yesterday's summary
+cto --date 2024-01-15  # Show summary for a specific date
 ```
 
-### Yesterday's Summary
+### Week/Month Summaries
 ```bash
-python worklog.py --yesterday
-# or: worklog -y
-```
-
-### Specific Date
-```bash
-python worklog.py --date 2024-01-15
-# or: worklog -d 2024-01-15
-# or: worklog day 2024-01-15
-```
-
-### Week Summary
-```bash
-python worklog.py week              # Current week
-python worklog.py week 2            # Week 2 of current year
-python worklog.py week 2024-W03     # Week 3 of 2024
-```
-
-### Month Summary
-```bash
-python worklog.py month             # Current month
-python worklog.py month january     # January of current year
-python worklog.py month 2024-01     # January 2024
+cto week               # Current week
+cto week 2             # Week 2 of current year
+cto month              # Current month
+cto month january      # January of current year
 ```
 
 ### AI CTO Agent
 
-Start an interactive conversation with the AI agent:
+Start an interactive conversation:
 ```bash
-python worklog.py chat
+cto chat
 ```
 
 Ask a single question:
 ```bash
-python worklog.py chat -q "Generate my standup notes"
-python worklog.py chat -q "What did I work on this week?"
-python worklog.py chat -q "Create a weekly report"
-python worklog.py chat -q "Summarize my Slack activity yesterday"
+cto chat -q "Generate my standup notes"
+cto chat -q "What did I work on this week?"
+cto chat -q "Create a weekly report"
 ```
 
-Use a different model:
-```bash
-python worklog.py chat -m claude-opus-4-20250514
-```
-
-#### Example AI Agent Interactions
+#### Example Interactions
 
 ```
 You: Generate my standup notes
@@ -164,95 +73,73 @@ CTO Agent:
 
 **Yesterday:**
 - Attended Sprint Planning meeting (1h)
-- Committed 3 changes to experiments repo (worklog CLI improvements)
+- Committed 3 changes to experiments repo
 - Researched Chrome history database structure
 
 **Today:**
 - Team sync at 10:00 AM
-- Continue worklog CLI development
+- Continue CLI development
 
 **Blockers:**
 - None
 ```
 
-```
-You: Create a weekly report
+## Setup Guide
 
-CTO Agent:
-### Weekly Report - Week 2
+Run `cto setup` to configure all integrations. Here's what you'll need:
 
-**Key Accomplishments:**
-- Implemented AI CTO agent with Claude integration
-- Added Slack message integration
-- Built flexible date range queries (day/week/month)
+### GitHub
+1. Go to [GitHub Settings → Personal Access Tokens](https://github.com/settings/tokens)
+2. Generate a new token with `repo` scope
+3. Provide the token during setup
 
-**Meetings & Collaboration:**
-- 5 meetings totaling 4.5 hours
-- Sprint planning, team syncs, 1:1s
+### Google Calendar
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project and enable the **Google Calendar API**
+3. Create OAuth credentials (Desktop application)
+4. Download the JSON file and provide its path during setup
 
-**Code Contributions:**
-- 12 commits across 2 repositories
-- +850 lines added, -120 lines deleted
+### Slack (Optional)
+1. Go to [Slack API Apps](https://api.slack.com/apps)
+2. Create an app with `search:read` scope
+3. Install to your workspace and copy the User OAuth Token
 
-**Communication:**
-- Active discussions in #engineering and #product channels
-
-**Research & Learning:**
-- Anthropic API documentation
-- Slack API integration patterns
-```
+### AI Agent (Optional)
+1. Get an API key from [Anthropic Console](https://console.anthropic.com/)
+2. Provide it during setup
 
 ## Configuration
 
 Configuration is stored in `~/.worklog/`:
-
 - `config.json` - API tokens and settings
-- `google_credentials.json` - Google OAuth client credentials
-- `google_token.json` - Your Google OAuth token (auto-generated)
+- `google_credentials.json` - Google OAuth credentials
+- `google_token.json` - Google OAuth token (auto-generated)
 
-### Config File Structure
+## Manual Installation
 
-```json
-{
-  "github_token": "ghp_...",
-  "github_username": "yourusername",
-  "chrome_profile": "Default",
-  "slack_token": "xoxp-...",
-  "anthropic_api_key": "sk-ant-..."
-}
+If you prefer not to use the install script:
+
+```bash
+git clone https://github.com/CloverLabsAI/CTO-CLI.git
+cd CTO-CLI
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
 ```
 
 ## Troubleshooting
 
-### "Cannot access Chrome history"
-Chrome locks its database while running. Either:
-- Close Chrome before running worklog, OR
-- The tool will automatically copy the database (may be slightly outdated)
-
-### "Google credentials not found"
-Run `worklog setup` and provide the path to your OAuth credentials JSON file.
-
-### "GitHub authentication failed"
-Your token may have expired. Generate a new one at https://github.com/settings/tokens
-
-### "Anthropic API key not configured"
-Run `worklog setup` to add your Anthropic API key, or add it manually to `~/.worklog/config.json`
-
-### "Slack API error"
-Ensure your Slack token has the `search:read` scope and the app is installed to your workspace.
+| Issue | Solution |
+|-------|----------|
+| "Cannot access Chrome history" | Close Chrome or the tool will copy the database |
+| "Google credentials not found" | Run `cto setup` and provide OAuth JSON path |
+| "GitHub authentication failed" | Generate a new token at github.com/settings/tokens |
+| "Anthropic API key not configured" | Run `cto setup` to add your API key |
 
 ## Privacy
 
-All data is processed locally. Your credentials are stored in `~/.worklog/` with restricted permissions (readable only by you).
-
-Data is only sent to:
-- Google Calendar API (for calendar events)
-- GitHub API (for commits)
-- Slack API (for messages, if configured)
-- Anthropic API (for AI features, if configured)
-
-No data is stored on external servers beyond what these APIs require for operation.
+All data is processed locally. Credentials are stored in `~/.worklog/` with restricted permissions. Data is only sent to the respective APIs (Google, GitHub, Slack, Anthropic) as needed.
 
 ## License
 
-MIT License - Feel free to modify and share!
+MIT License
