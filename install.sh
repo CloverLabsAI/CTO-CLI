@@ -14,10 +14,14 @@ echo "Installing CTO CLI..."
 # Create install directory
 mkdir -p "$BIN_DIR"
 
-# Clone or copy files
+# Clone or update
 if [ -d "$INSTALL_DIR" ]; then
     echo "Updating existing installation..."
-    cd "$INSTALL_DIR" && git pull
+    cd "$INSTALL_DIR"
+    # Clean up any local changes (pycache, etc.) before pulling
+    git reset --hard HEAD
+    git clean -fd
+    git pull
 else
     echo "Cloning repository..."
     git clone "$REPO_URL" "$INSTALL_DIR"
