@@ -11,10 +11,7 @@ from typing import Any
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from chrome import get_chrome_history
-from github import get_github_commits
-from gcalendar import get_calendar_events
-from slack import get_slack_messages
+from sources import get_chrome_history, get_github_commits, get_calendar_events, get_slack_messages
 from config import load_config
 
 

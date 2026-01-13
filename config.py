@@ -226,7 +226,7 @@ def test_connections(config: dict):
     # Test Google Calendar
     if CREDENTIALS_FILE.exists():
         try:
-            from gcalendar import test_calendar_connection
+            from sources import test_calendar_connection
             if test_calendar_connection(config):
                 console.print("   [green]✓ Google Calendar:[/green] Connected")
             else:
@@ -235,10 +235,10 @@ def test_connections(config: dict):
             console.print(f"   [red]✗ Google Calendar:[/red] {e}")
     else:
         console.print("   [yellow]○ Google Calendar:[/yellow] Credentials not configured")
-    
+
     # Test Chrome History
     try:
-        from chrome import test_chrome_access
+        from sources import test_chrome_access
         if test_chrome_access(config.get("chrome_profile")):
             console.print("   [green]✓ Chrome History:[/green] Accessible")
         else:
@@ -249,7 +249,7 @@ def test_connections(config: dict):
     # Test Slack
     if config.get("slack_token"):
         try:
-            from slack import get_slack_user_info
+            from sources import get_slack_user_info
             user_info = get_slack_user_info(config)
             if user_info:
                 console.print(f"   [green]✓ Slack:[/green] Connected as {user_info['user']} ({user_info['team']})")

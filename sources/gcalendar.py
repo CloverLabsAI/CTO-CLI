@@ -23,11 +23,11 @@ TOKEN_FILE = CONFIG_DIR / "google_token.json"
 def get_credentials() -> Optional[Credentials]:
     """Get or refresh Google OAuth credentials."""
     creds = None
-    
+
     # Load existing token
     if TOKEN_FILE.exists():
         creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), SCOPES)
-    
+
     # If no valid credentials, authenticate
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -39,12 +39,12 @@ def get_credentials() -> Optional[Credentials]:
                 )
             flow = InstalledAppFlow.from_client_secrets_file(str(CREDENTIALS_FILE), SCOPES)
             creds = flow.run_local_server(port=0)
-        
+
         # Save credentials for next run
         with open(TOKEN_FILE, "w") as token:
             token.write(creds.to_json())
         os.chmod(TOKEN_FILE, 0o600)
-    
+
     return creds
 
 
@@ -53,13 +53,13 @@ def get_calendar_events(config: dict, start: datetime, end: datetime) -> list[di
     creds = get_credentials()
     if not creds:
         return []
-    
+
     service = build("calendar", "v3", credentials=creds)
-    
+
     # Convert to RFC3339 format
     time_min = start.isoformat() + "Z"
     time_max = end.isoformat() + "Z"
-    
+
     events_result = service.events().list(
         calendarId="primary",
         timeMin=time_min,
@@ -68,14 +68,14 @@ def get_calendar_events(config: dict, start: datetime, end: datetime) -> list[di
         singleEvents=True,
         orderBy="startTime"
     ).execute()
-    
+
     events = events_result.get("items", [])
-    
+
     formatted_events = []
     for event in events:
         start_time = event["start"].get("dateTime", event["start"].get("date"))
         end_time = event["end"].get("dateTime", event["end"].get("date"))
-        
+
         # Parse times
         if "T" in start_time:
             start_dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
@@ -86,7 +86,7 @@ def get_calendar_events(config: dict, start: datetime, end: datetime) -> list[di
         else:
             time_str = "All day"
             duration_str = "All day"
-        
+
         formatted_events.append({
             "time": time_str,
             "summary": event.get("summary", "(No title)"),
@@ -94,7 +94,7 @@ def get_calendar_events(config: dict, start: datetime, end: datetime) -> list[di
             "description": event.get("description", ""),
             "location": event.get("location", ""),
         })
-    
+
     return formatted_events
 
 
@@ -102,7 +102,7 @@ def format_duration(seconds: float) -> str:
     """Format duration in seconds to human-readable string."""
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
-    
+
     if hours > 0:
         return f"{hours}h {minutes}m"
     return f"{minutes}m"
