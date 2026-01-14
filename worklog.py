@@ -11,7 +11,7 @@ With an AI-powered CTO agent for generating reports and insights.
 
 import argparse
 
-from commands import cmd_summary, cmd_day, cmd_week, cmd_month, cmd_chat, cmd_setup
+from commands import cmd_summary, cmd_day, cmd_week, cmd_month, cmd_chat, cmd_setup, cmd_projects
 
 
 def main():
@@ -20,19 +20,19 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  worklog                      Show today's work summary
-  worklog --yesterday          Show yesterday's work summary
-  worklog --date 2024-01-15    Show summary for a specific date
-  worklog day 2024-01-15       Show summary for a specific day
-  worklog week                 Show current week's summary
-  worklog week 2               Show week 2 of current year
-  worklog week 2024-W03        Show week 3 of 2024
-  worklog month                Show current month's summary
-  worklog month january        Show January of current year
-  worklog month 2024-01        Show January 2024
-  worklog chat                 Start AI CTO agent conversation
-  worklog chat -q "question"   Ask a single question
-  worklog setup                Configure API credentials
+  cto                          Show today's work summary
+  cto --yesterday              Show yesterday's summary
+  cto --date 2024-01-15        Show summary for a specific date
+  cto day 2024-01-15           Show summary for a specific day
+  cto week                     Show current week's summary
+  cto week 2                   Show week 2 of current year
+  cto month                    Show current month's summary
+  cto month january            Show January of current year
+  cto projects                 Show Linear projects by status
+  cto projects --all           Include completed projects
+  cto chat                     Start AI CTO agent conversation
+  cto chat -q "question"       Ask a single question
+  cto setup                    Configure API credentials
         """
     )
 
@@ -69,6 +69,15 @@ Examples:
         help="Claude model to use (default: claude-sonnet-4-20250514)"
     )
     chat_parser.set_defaults(func=cmd_chat)
+
+    # Projects command (Linear projects view)
+    projects_parser = subparsers.add_parser("projects", help="Show Linear projects grouped by status")
+    projects_parser.add_argument(
+        "--all", "-a",
+        action="store_true",
+        help="Include completed and canceled projects"
+    )
+    projects_parser.set_defaults(func=cmd_projects)
 
     # Default command arguments (for running without subcommand)
     parser.add_argument("--date", "-d", help="Date to show summary for (YYYY-MM-DD)")

@@ -306,31 +306,42 @@ class LinearMCPServer:
             for t in teams
         ]
 
-    def get_projects(self, team_key: Optional[str] = None) -> list[dict]:
+    def get_projects(self, team_key: Optional[str] = None, include_completed: bool = False) -> list[dict]:
         """
-        Get projects, optionally filtered by team.
+        Get projects with their latest status/health updates.
 
         Args:
             team_key: Filter by team key (e.g., 'ENG')
+            include_completed: Include completed/canceled projects
 
         Returns:
-            List of projects
+            List of projects sorted by last status update
         """
-        filter_str = ""
+        filter_parts = []
         if team_key:
-            filter_str = f'filter: {{accessibleTeams: {{key: {{eq: "{team_key}"}}}}}}, '
+            filter_parts.append(f'accessibleTeams: {{key: {{eq: "{team_key}"}}}}')
+        if not include_completed:
+            # Only include active projects (not completed or canceled)
+            filter_parts.append('state: {nin: ["completed", "canceled"]}')
+
+        filter_str = ""
+        if filter_parts:
+            filter_str = f"filter: {{{', '.join(filter_parts)}}}, "
 
         query = f"""
         query {{
-            projects({filter_str}first: 50) {{
+            projects({filter_str}first: 100, orderBy: updatedAt) {{
                 nodes {{
                     id
                     name
                     description
                     state
                     progress
+                    health
                     targetDate
                     startDate
+                    updatedAt
+                    createdAt
                     lead {{
                         name
                     }}
@@ -338,6 +349,17 @@ class LinearMCPServer:
                         nodes {{
                             name
                             key
+                        }}
+                    }}
+                    projectUpdates(first: 10, orderBy: createdAt) {{
+                        nodes {{
+                            id
+                            body
+                            health
+                            createdAt
+                            user {{
+                                name
+                            }}
                         }}
                     }}
                 }}
@@ -348,20 +370,45 @@ class LinearMCPServer:
         data = self._query(query)
         projects = data.get("projects", {}).get("nodes", [])
 
-        return [
-            {
+        result = []
+        for p in projects:
+            # Get all project updates
+            updates = p.get("projectUpdates", {}).get("nodes", [])
+            latest_update = updates[0] if updates else None
+
+            # Find the most recent update that has a health value
+            latest_health_update = None
+            for update in updates:
+                if update.get("health"):
+                    latest_health_update = update
+                    break  # Already sorted by createdAt desc, so first match is most recent
+
+            result.append({
                 "id": p.get("id"),
                 "name": p.get("name"),
                 "description": (p.get("description") or "")[:200],
                 "state": p.get("state"),
                 "progress": p.get("progress"),
+                "health": p.get("health"),
                 "target_date": p.get("targetDate"),
                 "start_date": p.get("startDate"),
+                "updated_at": p.get("updatedAt"),
+                "created_at": p.get("createdAt"),
                 "lead": p.get("lead", {}).get("name") if p.get("lead") else None,
                 "teams": [t.get("name") for t in p.get("teams", {}).get("nodes", [])],
-            }
-            for p in projects
-        ]
+                "latest_update": {
+                    "body": (latest_update.get("body") or "")[:200] if latest_update else None,
+                    "health": latest_update.get("health") if latest_update else None,
+                    "created_at": latest_update.get("createdAt") if latest_update else None,
+                    "author": latest_update.get("user", {}).get("name") if latest_update else None,
+                } if latest_update else None,
+                # Use the health update timestamp for sorting, fallback to any update, then project update
+                "health_updated_at": latest_health_update.get("createdAt") if latest_health_update else None,
+                "latest_health": latest_health_update.get("health") if latest_health_update else None,
+                "status_updated_at": latest_update.get("createdAt") if latest_update else p.get("updatedAt"),
+            })
+
+        return result
 
     def search_issues(self, query_text: str, limit: int = 20) -> list[dict]:
         """
