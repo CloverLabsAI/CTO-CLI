@@ -94,7 +94,7 @@ def cmd_projects(args):
     }
 
     # Display order
-    display_order = ["started", "planned", "backlog", "paused"]
+    display_order = [ "paused", "backlog", "planned", "started"]
     if hasattr(args, 'all') and args.all:
         display_order.extend(["completed", "canceled"])
 
